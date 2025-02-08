@@ -4,11 +4,12 @@ import re
 
 import fitz
 import pytesseract
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, request
 from PIL import Image
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -49,11 +50,6 @@ def extract_text_from_images(pdf_path):
         img = Image.open(io.BytesIO(pix.tobytes()))
         text += pytesseract.image_to_string(img) + "\n"
     return text.strip()
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
@@ -62,7 +58,6 @@ def upload_file():
     file = request.files['file']
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
-    
     filename = secure_filename(file.filename)
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(file_path)
@@ -72,7 +67,8 @@ def upload_file():
         extracted_text = extract_text_from_images(file_path)
 
     extracted_data = extract_medical_values(extracted_text)
-    return jsonify({"filename": filename, "extracted_data": extracted_data})
+
+    return jsonify({"extracted_data": extracted_data})
 
 if __name__ == '__main__':
     app.run(debug=True)

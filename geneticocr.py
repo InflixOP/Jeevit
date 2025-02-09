@@ -5,7 +5,7 @@ import re
 
 import fitz
 import pytesseract
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, request
 from PIL import Image
 from werkzeug.utils import secure_filename
 
@@ -38,11 +38,9 @@ def extract_genetic_values(raw_text):
         match = re.search(pattern, raw_text, re.IGNORECASE | re.DOTALL)
 
         if match:
-          
             value = match.group(1).strip()
             extracted_data[param] = value
         else:
-
             extracted_data[param] = "Not Found"
 
     return extracted_data
@@ -63,12 +61,8 @@ def extract_text_from_images(pdf_path):
         text += pytesseract.image_to_string(img) + "\n"
     return text.strip()
 
-@app.route("/")
-def index():
-    return render_template("index.html")
-
-@app.route("/upload", methods=["POST"])
-def upload_file():
+@app.route("/api/extract_genetic_data", methods=["POST"])
+def extract_genetic_data_api():
     if "file" not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
 
@@ -84,12 +78,10 @@ def upload_file():
     if not extracted_text:
         extracted_text = extract_text_from_images(file_path)
 
-    # Extract genetic values from text
     extracted_data = extract_genetic_values(extracted_text)
 
     return jsonify({
-        "filename": filename,
-        "extracted_data": extracted_data  # Display extracted data
+        "extracted_data": extracted_data
     })
 
 if __name__ == "__main__":
